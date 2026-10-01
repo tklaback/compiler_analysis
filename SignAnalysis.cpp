@@ -12,23 +12,23 @@
 //
 //===----------------------------------------------------------------------===//
 
-#include "ZeroAnalysis.h"
+#include "SignAnalysis.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/Matchers.h"
 
 using namespace mlir;
 
-namespace zero {
+namespace sign {
 
-void ZeroAnalysis::setToEntryState(ZeroLattice *lattice) {
-  propagateIfChanged(lattice, lattice->join(ZeroState::top()));
+void SignAnalysis::setToEntryState(SignLattice *lattice) {
+  propagateIfChanged(lattice, lattice->join(SignState::top()));
 }
 
 LogicalResult
-ZeroAnalysis::visitOperation(Operation *op,
-                             ArrayRef<const ZeroLattice *> operands,
-                             ArrayRef<ZeroLattice *> results) {
+SignAnalysis::visitOperation(Operation *op,
+                             ArrayRef<const SignLattice *> operands,
+                             ArrayRef<SignLattice *> results) {
   // Raising a result to top says "this operation could produce anything",
   // which is always a sound answer and is what every unhandled case does.
   auto unknown = [&] {
@@ -40,36 +40,30 @@ ZeroAnalysis::visitOperation(Operation *op,
   // floats, and vectors all land in `unknown`.
   if (op->getNumResults() != 1 || !op->getResult(0).getType().isIntOrIndex())
     return unknown();
-  ZeroLattice *result = results[0];
+  SignLattice *result = results[0];
 
   // Rule 1: a constant is zero or nonzero according to what it says.
   // This is the only rule that does not consult its operands, and without some
   // rule of this kind the analysis would have no facts to propagate at all.
   IntegerAttr value;
   if (matchPattern(op, m_Constant(&value))) {
-    ZeroState state = value.getValue().isZero() ? Kind::Zero : Kind::NonZero;
+    SignState state;
+    if (state.getValue() < 0)
+      state = Kind::Minus;
+    else if (state.getValue() == 0)
+      state = Kind::Zero;
+    else if (state.getValue() == 1)
+      state = Kind::Zero;
+    else
+      state = Kind::Positive;
     propagateIfChanged(result, result->join(state));
     return success();
   }
 
-  // Rule 2: `x & y` is zero if either operand is zero, since a zero operand
-  // clears every bit.  Note what this rule does *not* say: two nonzero
-  // operands tell us nothing, because 1 & 2 is 0.
-  if (isa<LLVM::AndOp>(op)) {
-    ZeroState lhs = operands[0]->getValue();
-    ZeroState rhs = operands[1]->getValue();
-
-    // Bottom means the solver has not yet proved anything reaches this
-    // operand.  Leaving the result alone keeps the analysis optimistic; the
-    // solver will call back here once the operand moves up the lattice.
-    if (lhs.isBottom() || rhs.isBottom())
-      return success();
-
-    if (lhs.kind == Kind::Zero || rhs.kind == Kind::Zero) {
-      propagateIfChanged(result, result->join(ZeroState(Kind::Zero)));
-      return success();
-    }
-  }
+  // Adding two positives is a positive
+  // Multiplying the same number returns a positive
+  // subtracting the same numbers returns 0
+  // + / + = positive, not top
 
   return unknown();
 }
