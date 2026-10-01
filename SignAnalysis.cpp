@@ -64,8 +64,12 @@ SignAnalysis::visitOperation(Operation *op,
   // Multiplying the same number returns a positive
   // subtracting the same numbers returns 0
   // + / + = positive, not top
+  // division by zero (zero or Top)
+  // something that can be negative or zero?
+
+  if ()
 
   return unknown();
 }
 
-} // namespace zero
+} // namespace sign

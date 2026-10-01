@@ -65,11 +65,11 @@ struct SignState {
 };
 
 inline llvm::raw_ostream &operator<<(llvm::raw_ostream &os,
-                                     const ZeroState &state) {
+                                     const SignState &state) {
   state.print(os);
   return os;
 }
 
-} // namespace zero
+} // namespace sign
 
 #endif

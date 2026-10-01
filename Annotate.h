@@ -7,14 +7,14 @@
 //
 //===----------------------------------------------------------------------===//
 
-#ifndef ZERO_ANNOTATE_H
-#define ZERO_ANNOTATE_H
+#ifndef SIGN_ANNOTATE_H
+#define SIGN_ANNOTATE_H
 
 #include "mlir/IR/Operation.h"
 #include "llvm/ADT/STLFunctionalExtras.h"
 #include "llvm/Support/raw_ostream.h"
 
-namespace zero {
+namespace sign {
 
 /// `describe` returns the annotation for a value, or an empty string to leave
 /// that value unannotated.  It is passed an AsmState so it can print SSA names
@@ -24,6 +24,6 @@ void printAnnotated(
     llvm::function_ref<std::string(mlir::Value, mlir::AsmState &)> describe,
     llvm::raw_ostream &os);
 
-} // namespace zero
+} // namespace sign
 
 #endif
