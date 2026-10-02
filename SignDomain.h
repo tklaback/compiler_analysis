@@ -42,19 +42,22 @@ struct SignState {
   bool isBottom() const { return kind == Kind::Bottom; }
 
   /// Least upper bound.  Two disagreeing facts lose all information.
-  static ZeroState join(const SignState &lhs, const SignState &rhs) {
+  static SignState join(const SignState &lhs, const SignState &rhs) {
     if (lhs.kind == Kind::Bottom)
       return rhs;
     if (rhs.kind == Kind::Bottom)
       return lhs;
     if (lhs.kind == rhs.kind)
       return lhs;
-    if (lhs.kind == Kind::One && lhs.kind == Kind::Zero)
-      return ZeroPlus;
-    if (lhs.kind == Kind::Plus && lhs.kind == Kind::Zero)
-      return ZeroPlus;
-    if (lhs.kind == Kind::Minus && lhs.kind == Kind::Zero)
-      return 
+    if ((lhs.kind == Kind::One && rhs.kind == Kind::Zero) ||
+        (rhs.kind == Kind::One && lhs.kind == Kind::Zero))
+      return Kind::ZeroPlus;
+    if ((lhs.kind == Kind::Plus && rhs.kind == Kind::Zero) ||
+        (rhs.kind == Kind::Plus && lhs.kind == Kind::Zero))
+      return Kind::ZeroPlus;
+    if ((lhs.kind == Kind::Minus && rhs.kind == Kind::Zero) ||
+        (rhs.kind == Kind::Minus && lhs.kind == Kind::Zero))
+      return Kind::ZeroMinus;
     return top();
   }
 

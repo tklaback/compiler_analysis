@@ -156,3 +156,11 @@ terminate.
 The analysis is intraprocedural. It does not refine facts on branch conditions,
 so a value tested against zero is not known nonzero on the taken edge — that,
 and a rule for `llvm.or`, are the natural first extensions.
+
+
+cd assgn1/sign-analysis
+export PATH=~/code/compilers/llvm-project/build/bin:$PATH
+cmake --build build
+clang -S -emit-llvm test/test.c -o test/test.ll
+mlir-translate --import-llvm test/test.ll -o test/test.mlir
+./run.sh test/test.mlir

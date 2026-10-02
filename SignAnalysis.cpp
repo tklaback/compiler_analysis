@@ -48,14 +48,15 @@ SignAnalysis::visitOperation(Operation *op,
   IntegerAttr value;
   if (matchPattern(op, m_Constant(&value))) {
     SignState state;
-    if (state.getValue() < 0)
+    llvm::outs() << "HERE: " << value.getValue();
+    if (value.getValue().isNegative())
       state = Kind::Minus;
-    else if (state.getValue() == 0)
+    else if (value.getValue().isZero())
       state = Kind::Zero;
-    else if (state.getValue() == 1)
-      state = Kind::Zero;
+    else if (value.getValue().isOne())
+      state = Kind::One;
     else
-      state = Kind::Positive;
+      state = Kind::Plus;
     propagateIfChanged(result, result->join(state));
     return success();
   }
@@ -67,7 +68,10 @@ SignAnalysis::visitOperation(Operation *op,
   // division by zero (zero or Top)
   // something that can be negative or zero?
 
-  if ()
+
+  if (llvm::isa<mlir::LLVM::MulOp>(op)) {
+    llvm::outs() << "hello!\n";
+  }
 
   return unknown();
 }
