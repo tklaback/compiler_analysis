@@ -23,6 +23,7 @@
 *.dll
 *.so.*
 *.ll
+*.mlir
 
 
 # Fortran module files

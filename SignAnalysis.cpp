@@ -70,7 +70,14 @@ SignAnalysis::visitOperation(Operation *op,
 
 
   if (llvm::isa<mlir::LLVM::MulOp>(op)) {
-    llvm::outs() << "hello!\n";
+    SignState state;
+    
+    // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x*x.
+    if (op->getOperand(0) == op->getOperand(1)) {
+      state = Kind::ZeroPlus;
+      propagateIfChanged(result, result->join(state));
+    }
+    return success();
   }
 
   return unknown();
