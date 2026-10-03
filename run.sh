@@ -9,11 +9,19 @@
 # alloca every use is a load the analysis knows nothing about.
 #
 # The plugin is SignAnalysis.dylib on macOS and SignAnalysis.so on Linux and
-# WSL2, so probe for it rather than hard-coding a suffix.  Set PLUGIN or
-# BUILD_DIR to override.
+# WSL2, so probe for it rather than hard-coding a suffix.  Set PLUGIN,
+# BUILD_DIR or LLVM_BIN to override.
 set -eu
 
 BUILD_DIR="${BUILD_DIR:-build}"
+
+# The plugin checks LLVM_VERSION_STRING at load time, so the tools must come
+# from the same tree the plugin was built against, not whatever is on PATH.
+LLVM_BIN="${LLVM_BIN:-$HOME/code/compilers/llvm-project/build/bin}"
+if [ -x "$LLVM_BIN/mlir-opt" ]; then
+  PATH="$LLVM_BIN:$PATH"
+  export PATH
+fi
 
 if [ -z "${PLUGIN:-}" ]; then
   for candidate in "$BUILD_DIR"/SignAnalysis.so "$BUILD_DIR"/SignAnalysis.dylib; do
@@ -45,7 +53,14 @@ case "$INPUT" in
   ll="$BUILD_DIR/$base.ll"
   raw="$BUILD_DIR/$base.raw.mlir"
   mlir="$BUILD_DIR/$base.mlir"
-  clang -S -emit-llvm "$INPUT" -o "$ll"
+  # This clang is built without a baked-in macOS SDK path, so anything that
+  # includes a system header needs -isysroot.
+  sysroot=""
+  if [ "$(uname)" = Darwin ] && command -v xcrun >/dev/null 2>&1; then
+    sysroot="-isysroot $(xcrun --show-sdk-path)"
+  fi
+  # shellcheck disable=SC2086
+  clang $sysroot -S -emit-llvm "$INPUT" -o "$ll"
   mlir-translate --import-llvm "$ll" -o "$raw"
   mlir-opt --mem2reg "$raw" -o "$mlir"
   ;;

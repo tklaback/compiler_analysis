@@ -58,6 +58,24 @@ struct SignState {
     if ((lhs.kind == Kind::Minus && rhs.kind == Kind::Zero) ||
         (rhs.kind == Kind::Minus && lhs.kind == Kind::Zero))
       return Kind::ZeroMinus;
+    if ((lhs.kind == Kind::Minus && rhs.kind == Kind::ZeroMinus) ||
+        (rhs.kind == Kind::Minus && lhs.kind == Kind::ZeroMinus))
+      return Kind::ZeroMinus;
+    if ((lhs.kind == Kind::One && rhs.kind == Kind::Plus) ||
+        (rhs.kind == Kind::One && lhs.kind == Kind::Plus))
+      return Kind::Plus;
+    if ((lhs.kind == Kind::Plus && rhs.kind == Kind::ZeroPlus) ||
+        (rhs.kind == Kind::Plus && lhs.kind == Kind::ZeroPlus))
+      return Kind::ZeroPlus;
+    if ((lhs.kind == Kind::ZeroMinus && rhs.kind == Kind::Zero) ||
+        (rhs.kind == Kind::ZeroMinus && lhs.kind == Kind::Zero))
+      return Kind::ZeroMinus;
+    if ((lhs.kind == Kind::ZeroPlus && rhs.kind == Kind::Zero) ||
+        (rhs.kind == Kind::ZeroPlus && lhs.kind == Kind::Zero))
+      return Kind::ZeroPlus;
+    if ((lhs.kind == Kind::ZeroPlus && rhs.kind == Kind::One) ||
+        (rhs.kind == Kind::ZeroPlus && lhs.kind == Kind::One))
+      return Kind::ZeroPlus;
     return top();
   }
 

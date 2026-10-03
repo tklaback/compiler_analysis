@@ -7,7 +7,7 @@ namespace sign {
 
 
 
-// I had claude copy these tables directly from the book. Note: no 0+, 0-, or 1 are included right now. I recognize this TODO.
+// I had claude copy these tables directly from the book. Note: no 0+, 0-, or 1 are included right now other than for mult and sub. I recognize this TODO.
 
 //          ⊥             0            -            +            ⊤
 inline constexpr Kind addTable[5][5] = {
