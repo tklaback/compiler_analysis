@@ -137,7 +137,7 @@ SignAnalysis::visitOperation(Operation *op,
     }
 
     // x/x = 1
-    if (operandsEqual(op) && !(rhs == Kind::Zero || rhs == Kind::ZeroMinus || rhs == Kind::ZeroPlus)) {
+    if (operandsEqual(op) && !(rhs == Kind::Zero || rhs == Kind::ZeroMinus || rhs == Kind::ZeroPlus || rhs == Kind::Top)) {
       state = Kind::One;
       propagateIfChanged(result, result->join(state));
       return success();
