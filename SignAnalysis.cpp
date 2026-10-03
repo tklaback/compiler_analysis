@@ -80,6 +80,36 @@ SignAnalysis::visitOperation(Operation *op,
     return success();
   }
 
+  if (llvm::isa<mlir::LLVM::SubOp>(op)) {
+    SignState state;
+    
+    // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x-x.
+    if (op->getOperand(0) == op->getOperand(1)) {
+      state = Kind::Zero;
+      propagateIfChanged(result, result->join(state));
+    }
+    return success();
+  }
+
+  if (llvm::isa<mlir::LLVM::SDivOp>(op)) {
+    SignState lhs = operands[0]->getValue();
+    SignState rhs = operands[1]->getValue();
+    SignState state;
+    // - / - = +
+    if (lhs == Kind::Minus && rhs == Kind::Minus) {
+      state = Kind::Plus;
+      propagateIfChanged(result, result->join(state));
+      return success();
+    }
+    // 0/{+, -} = 0
+    else if (lhs == Kind::Zero && (rhs == Kind::Plus || rhs == Kind::Minus)) {
+      state = Kind::Zero;
+      propagateIfChanged(result, result->join(state));
+      return success();
+    }
+  }
+
+
   return unknown();
 }
 
