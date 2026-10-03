@@ -29,6 +29,77 @@ inline constexpr Kind subTable[5][5] = {
 };
 
 
+// claude prompt: implement these facts:
+// zeroPlus - 
+//   zeroPlus = Top
+//   zeroMinus = zeroPlus
+//   minus = Plus
+//   plus = Top
+//   one = Top
+//   zero = zeroPlus
+//   top = top
+//   bottom = bottom
+
+// one - 
+//   zeroPlus: Top
+//   zeroMinus: plus
+//   minus: plus
+//   one: zero
+//   top: top
+//   bottom: bottom
+//   zero: one
+//   plus: ZeroMinus
+
+// zeroMinus - 
+//   zeroPlus: ZeroMinus
+//   zeroMinus: Top
+//   minus: Top
+//   one: minus
+//   top: top
+//   bottom: bottom
+//   zero: zeroMinus
+//   plus: minus
+
+
+// plus - 
+//   zeroPlus: top
+//   zeroMinus: plus
+//   one: zeroPositive
+
+// minus - 
+//   zeroPlus: minus
+//   zeroMinus: top
+//   one: minus
+
+// zero -
+//   zeroPlus: zeroMinus
+//   zeroMinus: zeroPlus
+//   one: minus
+
+// top - 
+//   zeroPlus: top
+//   zeroMinus: top
+//   one: top
+
+// bottom -
+//   zeroPlus: bottom
+//   zeroMinus: bottom
+//   one: bottom
+
+// Subtraction over all of Kind.  Not commutative, so the row is the left
+// operand and the column the right.  The cells the facts above do not name are
+// the tightest element containing every difference.
+//            ⊥             -             0                1              +             0-               0+               ⊤
+inline constexpr Kind subTable8[8][8] = {
+/* ⊥  */ {Kind::Bottom, Kind::Bottom, Kind::Bottom,    Kind::Bottom,    Kind::Bottom, Kind::Bottom,    Kind::Bottom,    Kind::Bottom},
+/* -  */ {Kind::Bottom, Kind::Top,    Kind::Minus,     Kind::Minus,     Kind::Minus,  Kind::Top,       Kind::Minus,     Kind::Top   },
+/* 0  */ {Kind::Bottom, Kind::Plus,   Kind::Zero,      Kind::Minus,     Kind::Minus,  Kind::ZeroPlus,  Kind::ZeroMinus, Kind::Top   },
+/* 1  */ {Kind::Bottom, Kind::Plus,   Kind::One,       Kind::Zero,      Kind::ZeroMinus, Kind::Plus,   Kind::Top,       Kind::Top   },
+/* +  */ {Kind::Bottom, Kind::Plus,   Kind::Plus,      Kind::ZeroPlus,  Kind::Top,    Kind::Plus,      Kind::Top,       Kind::Top   },
+/* 0- */ {Kind::Bottom, Kind::Top,    Kind::ZeroMinus, Kind::Minus,     Kind::Minus,  Kind::Top,       Kind::ZeroMinus, Kind::Top   },
+/* 0+ */ {Kind::Bottom, Kind::Plus,   Kind::ZeroPlus,  Kind::Top,       Kind::Top,    Kind::ZeroPlus,  Kind::Top,       Kind::Top   },
+/* ⊤  */ {Kind::Bottom, Kind::Top,    Kind::Top,       Kind::Top,       Kind::Top,    Kind::Top,       Kind::Top,       Kind::Top   },
+};
 
 
 // I implemented the extra 3 abstract values here:
