@@ -162,6 +162,7 @@ cd assgn1/sign-analysis
 export PATH=~/code/compilers/llvm-project/build/bin:$PATH
 cmake --build build
 clang -S -emit-llvm test/test.c -o test/test.ll
-mlir-translate --import-llvm test/test.ll -o test/test.mlir
-mlir-opt --mem2reg test/test.raw.mlir -o test/test.mlir -- this is needed since the fact isn't carried through a load
-./run.sh test/test.mlir
+mlir-translate --import-llvm test/test.ll -o test/test.raw.mlir
+mlir-opt --mem2reg test/test.raw.mlir -o test/test.mlir
+PLUGIN=build/SignAnalysis.dylib ./run.sh test/test.mlir
+

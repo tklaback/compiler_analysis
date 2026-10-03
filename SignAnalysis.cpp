@@ -148,8 +148,20 @@ SignAnalysis::visitOperation(Operation *op,
     return success();
   }
 
-  if (llvm::isa<mlir::LLVM::ICmpOp>(op)) {
-    state = Kind::ZeroPlus;
+  if (auto cmp = llvm::dyn_cast<mlir::LLVM::ICmpOp>(op)) {
+    switch (cmp.getPredicate()) {
+      case mlir::LLVM::ICmpPredicate::sgt:
+        state = apply(gtTable, lhs.kind, rhs.kind);
+        break;
+      case mlir::LLVM::ICmpPredicate::slt:
+        state = apply(gtTable, rhs.kind, lhs.kind);
+        break;
+      case mlir::LLVM::ICmpPredicate::eq:
+        state = apply(eqTable, lhs.kind, rhs.kind);
+        break;
+      default:
+        state = Kind::ZeroPlus;
+    }
     propagateIfChanged(result, result->join(state));
     return success();
   }
