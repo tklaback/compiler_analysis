@@ -29,6 +29,10 @@ LogicalResult
 SignAnalysis::visitOperation(Operation *op,
                              ArrayRef<const SignLattice *> operands,
                              ArrayRef<SignLattice *> results) {
+  SignState lhs = operands[0]->getValue();
+  SignState rhs = operands[1]->getValue();
+  SignState state;
+
   // Raising a result to top says "this operation could produce anything",
   // which is always a sound answer and is what every unhandled case does.
   auto unknown = [&] {
@@ -47,7 +51,6 @@ SignAnalysis::visitOperation(Operation *op,
   // rule of this kind the analysis would have no facts to propagate at all.
   IntegerAttr value;
   if (matchPattern(op, m_Constant(&value))) {
-    SignState state;
     llvm::outs() << "HERE: " << value.getValue();
     if (value.getValue().isNegative())
       state = Kind::Minus;
@@ -70,7 +73,6 @@ SignAnalysis::visitOperation(Operation *op,
 
 
   if (llvm::isa<mlir::LLVM::MulOp>(op)) {
-    SignState state;
     
     // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x*x.
     if (op->getOperand(0) == op->getOperand(1)) {
@@ -81,20 +83,23 @@ SignAnalysis::visitOperation(Operation *op,
   }
 
   if (llvm::isa<mlir::LLVM::SubOp>(op)) {
-    SignState state;
     
     // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x-x.
     if (op->getOperand(0) == op->getOperand(1)) {
       state = Kind::Zero;
       propagateIfChanged(result, result->join(state));
+      return success();
     }
-    return success();
+
+    // Plus - Minus = Plus
+    if (lhs == Kind::Plus && rhs == Kind::Minus) {
+      state = Kind::Plus;
+      propagateIfChanged(result, result->join(state));
+      return success();
+    }
   }
 
   if (llvm::isa<mlir::LLVM::SDivOp>(op)) {
-    SignState lhs = operands[0]->getValue();
-    SignState rhs = operands[1]->getValue();
-    SignState state;
     // - / - = +
     if (lhs == Kind::Minus && rhs == Kind::Minus) {
       state = Kind::Plus;
@@ -102,11 +107,25 @@ SignAnalysis::visitOperation(Operation *op,
       return success();
     }
     // 0/{+, -} = 0
-    else if (lhs == Kind::Zero && (rhs == Kind::Plus || rhs == Kind::Minus)) {
+    if (lhs == Kind::Zero && (rhs == Kind::Plus || rhs == Kind::Minus)) {
       state = Kind::Zero;
       propagateIfChanged(result, result->join(state));
       return success();
     }
+
+    // x/x = 1
+    if (op->getOperand(0) == op->getOperand(1)) {
+      state = Kind::One;
+      propagateIfChanged(result, result->join(state));
+      return success();
+    }
+
+  }
+
+  if (llvm::isa<mlir::LLVM::ICmpOp>(op)) {
+    state = Kind::ZeroPlus;
+    propagateIfChanged(result, result->join(state));
+    return success();
   }
 
 
