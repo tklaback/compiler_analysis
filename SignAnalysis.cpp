@@ -25,12 +25,22 @@ void SignAnalysis::setToEntryState(SignLattice *lattice) {
   propagateIfChanged(lattice, lattice->join(SignState::top()));
 }
 
+bool operandsEqual(mlir::Operation *op) {
+  if (op->getOperand(0) == op->getOperand(1))
+    return true;
+  auto load0 = op->getOperand(0).getDefiningOp<LLVM::LoadOp>();
+  auto load1 = op->getOperand(1).getDefiningOp<LLVM::LoadOp>();
+  llvm::errs() << "LOAD0 ADDR: " << load0.getAddr() << "\n";
+  if (load0 && load1 && load0.getAddr() == load1.getAddr())
+    return true;
+  return false;
+  
+}
+
 LogicalResult
 SignAnalysis::visitOperation(Operation *op,
                              ArrayRef<const SignLattice *> operands,
                              ArrayRef<SignLattice *> results) {
-  SignState lhs = operands[0]->getValue();
-  SignState rhs = operands[1]->getValue();
   SignState state;
 
   // Raising a result to top says "this operation could produce anything",
@@ -45,6 +55,14 @@ SignAnalysis::visitOperation(Operation *op,
   if (op->getNumResults() != 1 || !op->getResult(0).getType().isIntOrIndex())
     return unknown();
   SignLattice *result = results[0];
+
+  // Constants take no operands and unary ops take one, so only read these
+  // once an op is known to be binary; they stay bottom otherwise.
+  SignState lhs, rhs;
+  if (operands.size() >= 2) {
+    lhs = operands[0]->getValue();
+    rhs = operands[1]->getValue();
+  }
 
   // Rule 1: a constant is zero or nonzero according to what it says.
   // This is the only rule that does not consult its operands, and without some
@@ -74,8 +92,7 @@ SignAnalysis::visitOperation(Operation *op,
 
   if (llvm::isa<mlir::LLVM::MulOp>(op)) {
     
-    // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x*x.
-    if (op->getOperand(0) == op->getOperand(1)) {
+    if (operandsEqual(op)) {
       state = Kind::ZeroPlus;
       propagateIfChanged(result, result->join(state));
     }
@@ -84,8 +101,7 @@ SignAnalysis::visitOperation(Operation *op,
 
   if (llvm::isa<mlir::LLVM::SubOp>(op)) {
     
-    // TODO: fix this to work without -O1 optimization and to work if value is loaded before use in x-x.
-    if (op->getOperand(0) == op->getOperand(1)) {
+    if (operandsEqual(op)) {
       state = Kind::Zero;
       propagateIfChanged(result, result->join(state));
       return success();
@@ -114,7 +130,7 @@ SignAnalysis::visitOperation(Operation *op,
     }
 
     // x/x = 1
-    if (op->getOperand(0) == op->getOperand(1)) {
+    if (operandsEqual(op)) {
       state = Kind::One;
       propagateIfChanged(result, result->join(state));
       return success();

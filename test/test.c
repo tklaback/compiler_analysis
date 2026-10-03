@@ -1,7 +1,12 @@
+int h(int a, int b) {
+  int t = a;
+  int u = t;
+  t = b;
+  return t * t;
+}
 
 
 int main() {
-  int x = 5;
-  int y = x * x;
+  h(5, 6);
   return 0;
 }
