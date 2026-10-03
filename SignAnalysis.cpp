@@ -30,7 +30,6 @@ bool operandsEqual(mlir::Operation *op) {
     return true;
   auto load0 = op->getOperand(0).getDefiningOp<LLVM::LoadOp>();
   auto load1 = op->getOperand(1).getDefiningOp<LLVM::LoadOp>();
-  llvm::errs() << "LOAD0 ADDR: " << load0.getAddr() << "\n";
   if (load0 && load1 && load0.getAddr() == load1.getAddr())
     return true;
   return false;
@@ -69,7 +68,6 @@ SignAnalysis::visitOperation(Operation *op,
   // rule of this kind the analysis would have no facts to propagate at all.
   IntegerAttr value;
   if (matchPattern(op, m_Constant(&value))) {
-    llvm::outs() << "HERE: " << value.getValue();
     if (value.getValue().isNegative())
       state = Kind::Minus;
     else if (value.getValue().isZero())
@@ -130,7 +128,7 @@ SignAnalysis::visitOperation(Operation *op,
     }
 
     // x/x = 1
-    if (operandsEqual(op)) {
+    if (operandsEqual(op) && !(rhs == Kind::Zero || rhs == Kind::ZeroMinus || rhs == Kind::ZeroPlus)) {
       state = Kind::One;
       propagateIfChanged(result, result->join(state));
       return success();
@@ -144,6 +142,11 @@ SignAnalysis::visitOperation(Operation *op,
     return success();
   }
 
+  if (llvm::isa<mlir::LLVM::ZExtOp>(op)) {
+    state = Kind::ZeroPlus;
+    propagateIfChanged(result, result->join(state));
+    return success();
+  }
 
   return unknown();
 }
