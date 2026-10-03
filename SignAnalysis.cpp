@@ -13,6 +13,7 @@
 //===----------------------------------------------------------------------===//
 
 #include "SignAnalysis.h"
+#include "SignTables.h"
 
 #include "mlir/Dialect/LLVMIR/LLVMDialect.h"
 #include "mlir/IR/Matchers.h"
@@ -93,7 +94,11 @@ SignAnalysis::visitOperation(Operation *op,
     if (operandsEqual(op)) {
       state = Kind::ZeroPlus;
       propagateIfChanged(result, result->join(state));
+      return success();
     }
+
+    state = apply(mulTable, lhs.kind, rhs.kind);
+    propagateIfChanged(result, result->join(state));
     return success();
   }
 
@@ -111,6 +116,10 @@ SignAnalysis::visitOperation(Operation *op,
       propagateIfChanged(result, result->join(state));
       return success();
     }
+
+    state = apply(subTable, lhs.kind, rhs.kind);
+    propagateIfChanged(result, result->join(state));
+    return success();
   }
 
   if (llvm::isa<mlir::LLVM::SDivOp>(op)) {
@@ -134,6 +143,9 @@ SignAnalysis::visitOperation(Operation *op,
       return success();
     }
 
+    state = apply(divTable, lhs.kind, rhs.kind);
+    propagateIfChanged(result, result->join(state));
+    return success();
   }
 
   if (llvm::isa<mlir::LLVM::ICmpOp>(op)) {
@@ -144,6 +156,12 @@ SignAnalysis::visitOperation(Operation *op,
 
   if (llvm::isa<mlir::LLVM::ZExtOp>(op)) {
     state = Kind::ZeroPlus;
+    propagateIfChanged(result, result->join(state));
+    return success();
+  }
+
+  if (llvm::isa<mlir::LLVM::AddOp>(op)) {
+    state = apply(addTable, lhs.kind, rhs.kind);
     propagateIfChanged(result, result->join(state));
     return success();
   }

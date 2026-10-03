@@ -13,6 +13,7 @@ int main() {
   int zm = zero / neg;  // Zero / Minus -> zero
   int xx = pos / pos;   // x / x -> one
   int cmp = pos > zero; // icmp -> zeroplus
+  int two_pos = pos + pos;
 
-  return one + sq + diff + pm + nn + zp + zm + xx + cmp;
+  return one + sq + diff + pm + nn + zp + zm + xx + cmp + two_pos;
 }
