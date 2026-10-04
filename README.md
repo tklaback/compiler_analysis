@@ -19,3 +19,9 @@ clang -isysroot $(xcrun --show-sdk-path) -S -emit-llvm sqlite3.c -o test/sqlite.
 mlir-translate --import-llvm test/sqlite.ll -o test/sqlite.raw.mlir
 mlir-opt --mem2reg test/sqlite.raw.mlir -o test/sqlite.mlir
 PLUGIN=build/SignAnalysis.dylib ./run.sh test/sqlite.mlir
+
+
+2 commands from the reduction directory:
+
+llvm-reduce --test=./test1.sh input1.ll -o reduced1.ll
+mlir-translate --import-llvm reduced1.ll -o /tmp/raw.mlir && mlir-opt --mem2reg /tmp/raw.mlir -o reduced1.mlir
