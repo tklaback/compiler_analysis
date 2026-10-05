@@ -1,5 +1,5 @@
 #!/bin/bash
-# Interestingness test: the analysis proves a value divided by itself is one.
+# Interestingness test: the analysis proves a value divided by itself is one. expected input file: input3.ll
 set -u
 
 if [ "$#" -lt 1 ]; then

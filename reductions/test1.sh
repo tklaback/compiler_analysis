@@ -1,7 +1,7 @@
 #!/bin/bash
 # Interestingness test: the analysis proves some value is zerominus.
 # zerominus here is generated when two control paths converge
-# and the value from one path is 0 and from the other it is negative, yielding the LUB of the tweo: zerominus.
+# and the value from one path is 0 and from the other it is negative, yielding the LUB of the tweo: zerominus. Expected input file: input3.ll 
 set -u
 
 if [ "$#" -lt 1 ]; then

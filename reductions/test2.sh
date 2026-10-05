@@ -1,5 +1,5 @@
 #!/bin/bash
-# Interestingness test: the analysis proves a multiply is strictly positive.
+# Interestingness test: the analysis proves a multiply is strictly positive. expected input file: sqlite.ll.ll
 set -u
 
 if [ "$#" -lt 1 ]; then
