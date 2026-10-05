@@ -23,5 +23,6 @@ PLUGIN=build/SignAnalysis.dylib ./run.sh test/sqlite.mlir
 
 2 commands from the reduction directory:
 
-llvm-reduce --test=./test1.sh input1.ll -o reduced1.ll
-mlir-translate --import-llvm reduced1.ll -o /tmp/raw.mlir && mlir-opt --mem2reg /tmp/raw.mlir -o reduced1.mlir
+./testN.sh inputN.ll ; echo $?
+llvm-reduce --test=./testN.sh inputN.ll -o reducedN.ll
+mlir-translate --import-llvm reducedN.ll -o /tmp/raw.mlir && mlir-opt --mem2reg /tmp/raw.mlir -o reducedN.mlir
