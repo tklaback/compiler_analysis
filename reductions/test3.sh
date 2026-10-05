@@ -1,7 +1,5 @@
 #!/bin/bash
-# Interestingness test: the analysis proves some value is zerominus.
-# zerominus here is generated when two control paths converge
-# and the value from one path is 0 and from the other it is negative, yielding the LUB of the tweo: zerominus.
+# Interestingness test: the analysis proves a value divided by itself is one.
 set -u
 
 if [ "$#" -lt 1 ]; then
@@ -27,14 +25,18 @@ if [ -x "$LLVM_BIN/mlir-opt" ]; then
   export PATH
 fi
 
-raw=$(mktemp -t reduce1raw)
-promoted=$(mktemp -t reduce1m2r)
+raw=$(mktemp -t reduce3raw)
+promoted=$(mktemp -t reduce3m2r)
 trap 'rm -f "$raw" "$promoted"' EXIT
 
 mlir-translate --import-llvm "$FILE" -o "$raw" 2>/dev/null || exit 1
 mlir-opt --mem2reg "$raw" -o "$promoted" 2>/dev/null || exit 1
 
-mlir-opt --load-pass-plugin="$PLUGIN" \
-         --pass-pipeline='builtin.module(sign-analysis)' \
-         "$promoted" 2>&1 1>/dev/null |
-  grep -q 'is zerominus'
+listing=$(mlir-opt --load-pass-plugin="$PLUGIN" \
+                   --pass-pipeline='builtin.module(sign-analysis)' \
+                   "$promoted" 2>&1 1>/dev/null) || exit 1
+
+# Also require the 20 to survive.  llvm-reduce shrinks constants toward 1
+printf '%s\n' "$listing" | grep -q 'llvm\.sdiv.*is one' &&
+  printf '%s\n' "$listing" | grep -q 'constant(20 '
+
